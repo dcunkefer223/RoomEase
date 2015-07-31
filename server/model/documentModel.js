@@ -17,18 +17,6 @@ exports.add = function(data, cb){
     imgData = '\\x' + imgData;
     var queryString = 'INSERT INTO documents (dwelling_id, user_id, file_name, filesize, type, data) \
       values($1, $2, $3, $4, $5, $6)';
-    // var queryString = "INSERT INTO documents (file_name, dwelling_id, user_id, filesize, type, data) \
-    //                  VALUES ("
-    //                  + "'" + data.file_name + "', "
-    //                  + "'"  +    data.dwelling_Id + "', "
-    //                  + "'"  +    data.user_id + "', "
-    //                  + "'" +     data.filesize + "', "
-    //                  + "'" + data.type + "', "
-    //                  + "'" +     imgData + "') RETURNING id;";
-
-        // function(err, writeResult) {
-        //   console.log('err',err,'pg writeResult',writeResult);
-        // });
     db.query(queryString, [data.dwelling_id, data.user_id, data.file_name, data.filesize, data.type, imgData], function(err, results){
     //db.query(queryString, function(err, results){
       if(err) console.log(err);
@@ -45,13 +33,30 @@ exports.add = function(data, cb){
     err ? cb(err, null) : cb(null, results.rows);
   });
 },
+
  exports.showDoc = function(documentId, cb){
-  var queryString = "SELECT data FROM documents WHERE user_id = " + documentId + ";";
-  db.query(queryString, function(err, results){
-    console.log("Inside the getDocs USER query");
-    err ? cb(err, null) : cb(null, results.rows);
+    fs.writeFile(__dirname + '/../../uploads'+ data.file_name,'hex', function(err, imgData){
+      var queryString = 'SELECT * FROM documents WHERE id = '+ documentId+';';
+      db.query(queryString, function (err, results){
+        if(err) console.log(err);
+        console.log("Inside the addDocument query");
+        err ? cb(err, null) : cb(null, results);
+      })
+    })
+  }, 
+
+/*
+app.get('/url/to/get/', function(req, res, next) {
+  app.pgClient.query('select image from image_table limit 1',
+                     function(err, readResult) {
+    console.log('err',err,'pg readResult',readResult);
+    
+
+    res.json(200, {success: true});
   });
-},
+});
+*/
+
   exports.getDocsUsers = function(userId, cb){
   var queryString = "SELECT file_name FROM documents WHERE user_id = " + userId + ";";
   db.query(queryString, function(err, results){
