@@ -4,6 +4,8 @@ angular.module('roomEase')
         $scope.calendarView = 'month';
         $scope.calendarDay = new Date();
 
+
+        //Helps convert UTC timestamps received from database into timezone-friendly Date objects
         $scope.fixDate = function (dateObj) {
             var newDate = new Date(dateObj);
             var offset = newDate.getTimezoneOffset();
@@ -16,6 +18,7 @@ angular.module('roomEase')
             return setDate;
         };
 
+        //Similar to fixdate, but makes sure to account for timezone difference before saving to database
         $scope.saveDate = function (dateObj) {
             var newDate = new Date(dateObj);
             var offset = newDate.getTimezoneOffset();
@@ -28,17 +31,19 @@ angular.module('roomEase')
             return setDate;
         };
 
+        //Fetches all calendar events from database
         $scope.getEvents = function(event) {
             eventAPIRequests.getEvents().then(function(res){
-              console.log("response: ", res);
               $scope.events = [];
               if(Array.isArray(res)){
+                //Adjusts start and end times for events so they will display correctly
                   for (var i = 0; i < res.length; i++) {
                       $scope.events.push(res[i]);
                       $scope.events[i].start_at = $scope.fixDate($scope.events[i].start_at);
                       $scope.events[i].end_at = $scope.fixDate($scope.events[i].end_at);
                       $scope.events[i].startsAt = $scope.events[i].start_at;
                       $scope.events[i].endsAt = $scope.events[i].end_at;
+                      //(Optional) Prevent badge icon from incrementing on calendar
                       $scope.events[i]['incrementsBadgeTotal'] = false;
                   };
               } else { 
@@ -47,6 +52,7 @@ angular.module('roomEase')
             });
         };
 
+        //If the event exists in the database (has an id), send update query to database
         $scope.updateEvent = function(event) {
             if(event.id){
                 eventAPIRequests.updateEvent({
@@ -57,18 +63,19 @@ angular.module('roomEase')
                     id: event.id
 
                 }).then($scope.getEvents(function(err, result) {
-                        console.log('result of update: ', result);
+                        if err console.error(err);
                     })
                 );
+        //Else, create a new event in the database
             } else {
                 eventAPIRequests.createEvent({
                 title: event.title,
                 eventType: event.type,
                 startAt: event.startsAt,
                 endAt: event.endsAt
-
+        //Grab all events from the database again
             }).then($scope.getEvents(function(err, result) {
-                    console.log('result of create: ', result);
+                    if err console.error(err);
                 })
             );
             }
@@ -83,31 +90,16 @@ angular.module('roomEase')
                 id: event.id
 
             }).then($scope.getEvents(function(err, result) {
-                    console.log('result of delete: ', result);
+                    if err console.error(err);
                 })
             );
-
-            eventAPIRequests.getEvents().then(function (res) {
-                console.log(res);
-            });
-        };
-
-        
-        $scope.date = function () {
-            var newDate = new Date();
-            var year = newDate.getFullYear();
-            var month = newDate.getMonth();
-            var day = newDate.getDate();
-            var hour = newDate.getHours();
-            var setDate = new Date(year, month, day, hour);
-            return setDate;
 
             eventAPIRequests.getEvents().then(function (res) {
                 // console.log(res);
             });
         };
 
-
+        //Initialize the events by grabbing them from the database the first time the view loads
         $scope.events = $scope.getEvents();
             
             var defaultEvent = {
@@ -122,7 +114,7 @@ angular.module('roomEase')
                 incrementsBadgeTotal: false, //If set to false then will not count towards the badge total amount on the month and year view
                 cssClass: 'a-css-class-name' //A CSS class (or more, just separate with spaces) that will be added to the event when it is displayed on each view. Useful for marking an event as selected / active etc
             };
-
+        
         $scope.createDefaultEvent = function () {
 
             eventAPIRequests.createEvent({
@@ -132,7 +124,7 @@ angular.module('roomEase')
                 endAt: defaultEvent.endsAt
 
             }).then($scope.getEvents(function(err, result) {
-                    console.log('result of create: ', result);
+                    if err console.error(err);
                 })
             );
 
